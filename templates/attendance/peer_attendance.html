@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ peer.name }}'s Attendance - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Peer Header -->
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <img src="{{ peer.avatar_url }}" alt="{{ peer.name }}" class="w-14 h-14 rounded-2xl object-cover border border-slate-200">
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h1 class="text-xl font-bold text-slate-900">{{ peer.name }}'s Attendance</h1>
+                    <span class="bg-slate-100 text-slate-700 text-xs px-2 py-0.5 rounded font-mono">{{ peer.roll_number }}</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">{{ peer.get_branch_display }} • Semester {{ peer.semester }}</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'public_profile' peer.roll_number %}" class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition">
+                View Full Profile
+            </a>
+            <a href="{% url 'students_directory' %}" class="px-4 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 font-semibold text-xs transition">
+                &larr; Peer Directory
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold uppercase text-slate-400">Attendance Rate</span>
+            <div class="text-3xl font-extrabold mt-2 {% if summary.percentage >= 75 %}text-emerald-600{% elif summary.percentage >= 60 %}text-amber-500{% else %}text-rose-600{% endif %}">
+                {{ summary.percentage }}%
+            </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold uppercase text-slate-400">Present</span>
+            <div class="text-3xl font-extrabold text-emerald-600 mt-2">{{ summary.present }}</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold uppercase text-slate-400">Late</span>
+            <div class="text-3xl font-extrabold text-amber-500 mt-2">{{ summary.late }}</div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold uppercase text-slate-400">Absent</span>
+            <div class="text-3xl font-extrabold text-rose-500 mt-2">{{ summary.absent }}</div>
+        </div>
+    </div>
+
+    <!-- Attendance Records Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100">
+            <h2 class="text-base font-bold text-slate-800">Recorded Sessions</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-[11px] uppercase font-semibold text-slate-500 border-b border-slate-100">
+                        <th class="py-3.5 px-6">Date</th>
+                        <th class="py-3.5 px-6">Activity Session</th>
+                        <th class="py-3.5 px-6">Category</th>
+                        <th class="py-3.5 px-6">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    {% for r in records %}
+                    <tr class="hover:bg-slate-50/70 transition">
+                        <td class="py-3.5 px-6 font-mono text-xs text-slate-600">{{ r.date|date:"d M Y" }}</td>
+                        <td class="py-3.5 px-6 font-medium text-slate-800">
+                            {{ r.activity.title|default:"General Club Meetup" }}
+                        </td>
+                        <td class="py-3.5 px-6 text-xs text-slate-500">
+                            {{ r.activity.get_activity_type_display|default:"General" }}
+                        </td>
+                        <td class="py-3.5 px-6">
+                            {% if r.status == 'PRESENT' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <i class="fa-solid fa-circle-check text-[10px] mr-1.5"></i>Present
+                            </span>
+                            {% elif r.status == 'LATE' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                <i class="fa-solid fa-clock text-[10px] mr-1.5"></i>Late
+                            </span>
+                            {% elif r.status == 'ABSENT' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                <i class="fa-solid fa-circle-xmark text-[10px] mr-1.5"></i>Absent
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                                {{ r.get_status_display }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-slate-400 text-xs">
+                            No attendance records on file for this member.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

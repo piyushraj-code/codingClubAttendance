@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Day-Wise Attendance Marking - Master Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full">
+                    Master Admin Tool
+                </span>
+                <span class="text-xs text-slate-400">•</span>
+                <span class="text-xs font-medium text-slate-500">Day-Wise Attendance Batch Marker</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Mark Student Attendance</h1>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'admin_export_attendance' %}" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs transition flex items-center space-x-1.5 shadow-xs">
+                <i class="fa-solid fa-download text-emerald-600"></i>
+                <span>Export Master CSV</span>
+            </a>
+            <a href="{% url 'admin_dashboard' %}" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold rounded-xl text-xs transition">
+                &larr; Admin Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Date & Activity Configuration Form -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+        <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <!-- Date Picker -->
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Select Date</label>
+                <input type="date" name="date" value="{{ selected_date_str }}" class="form-input text-xs py-2">
+            </div>
+
+            <!-- Activity Selector -->
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Club Activity</label>
+                <select name="activity" class="form-input text-xs py-2">
+                    <option value="">-- General Club Session --</option>
+                    {% for act in activities %}
+                    <option value="{{ act.id }}" {% if selected_activity.id == act.id %}selected{% endif %}>
+                        {{ act.title|truncatechars:30 }} ({{ act.date|date:"d M" }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Branch Filter -->
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Filter Branch</label>
+                <select name="branch" class="form-input text-xs py-2">
+                    <option value="">All Branches</option>
+                    {% for code, label in branches %}
+                    <option value="{{ code }}" {% if branch_filter == code %}selected{% endif %}>{{ code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Semester Filter -->
+            <div>
+                <label class="block text-xs font-bold uppercase text-slate-600 mb-1.5">Filter Semester</label>
+                <select name="semester" class="form-input text-xs py-2">
+                    <option value="">All Semesters</option>
+                    {% for sem_val, sem_label in semesters %}
+                    <option value="{{ sem_val }}" {% if semester_filter == sem_val|stringformat:"i" %}selected{% endif %}>Sem {{ sem_val }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" class="w-full py-2 px-4 bg-purple-700 hover:bg-purple-800 text-white font-semibold rounded-lg text-xs transition shadow-sm">
+                    Apply Filter & Date
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Batch Attendance Marking Table Form -->
+    <form method="POST" id="attendanceBatchForm" class="space-y-4">
+        {% csrf_token %}
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            
+            <!-- Table Toolbar with Batch Quick Action Buttons -->
+            <div class="p-4 sm:px-6 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold text-slate-700">
+                        Total Students in Roster: <strong class="text-purple-700">{{ student_rows|length }}</strong>
+                    </span>
+                    <span class="text-slate-300">|</span>
+                    <span class="text-xs text-slate-500 font-mono">Date: {{ selected_date|date:"l, d M Y" }}</span>
+                </div>
+
+                <!-- Fast Batch Buttons -->
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-semibold text-slate-500 mr-1">Quick Bulk Mark:</span>
+                    <button type="button" onclick="markAllStatus('PRESENT')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                        <span>All Present</span>
+                    </button>
+                    <button type="button" onclick="markAllStatus('ABSENT')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-300 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                        <i class="fa-solid fa-xmark text-[10px]"></i>
+                        <span>All Absent</span>
+                    </button>
+                    <button type="button" onclick="markAllStatus('LATE')" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center space-x-1">
+                        <i class="fa-solid fa-clock text-[10px]"></i>
+                        <span>All Late</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Attendance Records Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100/70 text-[11px] uppercase font-bold text-slate-600 border-b border-slate-200">
+                            <th class="py-3 px-6">Roll No</th>
+                            <th class="py-3 px-6">Student Name</th>
+                            <th class="py-3 px-6">Branch & Sem</th>
+                            <th class="py-3 px-6 text-center">Attendance Status</th>
+                            <th class="py-3 px-6">Remarks / Note</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 text-sm">
+                        {% for row in student_rows %}
+                        {% with s=row.student status=row.current_status %}
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <!-- Roll Number -->
+                            <td class="py-3.5 px-6 font-mono font-bold text-xs text-slate-700">
+                                {{ s.roll_number }}
+                            </td>
+
+                            <!-- Student Info -->
+                            <td class="py-3.5 px-6">
+                                <div class="flex items-center space-x-2.5">
+                                    <img src="{{ s.avatar_url }}" alt="{{ s.name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200">
+                                    <div>
+                                        <a href="{% url 'public_profile' s.roll_number %}" target="_blank" class="font-bold text-slate-800 hover:text-purple-700 transition">
+                                            {{ s.name }}
+                                        </a>
+                                        <span class="text-[10px] text-slate-400 block font-mono">{{ s.email }}</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Branch & Sem -->
+                            <td class="py-3.5 px-6 text-xs text-slate-600">
+                                <span class="font-semibold">{{ s.get_branch_display }}</span>
+                                <span class="text-slate-400 block text-[11px]">Semester {{ s.semester }}</span>
+                            </td>
+
+                            <!-- Attendance Radio Group Pills -->
+                            <td class="py-3.5 px-6">
+                                <div class="flex items-center justify-center space-x-1.5">
+                                    <!-- Present -->
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="status_{{ s.id }}" value="PRESENT" class="peer hidden status-radio" {% if status == 'PRESENT' %}checked{% endif %}>
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 bg-slate-100 peer-checked:bg-emerald-600 peer-checked:text-white transition">
+                                            Present
+                                        </span>
+                                    </label>
+
+                                    <!-- Absent -->
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="status_{{ s.id }}" value="ABSENT" class="peer hidden status-radio" {% if status == 'ABSENT' %}checked{% endif %}>
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 bg-slate-100 peer-checked:bg-rose-600 peer-checked:text-white transition">
+                                            Absent
+                                        </span>
+                                    </label>
+
+                                    <!-- Late -->
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="status_{{ s.id }}" value="LATE" class="peer hidden status-radio" {% if status == 'LATE' %}checked{% endif %}>
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 bg-slate-100 peer-checked:bg-amber-500 peer-checked:text-white transition">
+                                            Late
+                                        </span>
+                                    </label>
+
+                                    <!-- Excused -->
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="status_{{ s.id }}" value="EXCUSED" class="peer hidden status-radio" {% if status == 'EXCUSED' %}checked{% endif %}>
+                                        <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-500 bg-slate-100 peer-checked:bg-indigo-600 peer-checked:text-white transition">
+                                            Excused
+                                        </span>
+                                    </label>
+                                </div>
+                            </td>
+
+                            <!-- Remarks -->
+                            <td class="py-3.5 px-6">
+                                <input type="text" name="remarks_{{ s.id }}" value="{{ row.remarks }}" placeholder="Optional notes" class="w-full text-xs p-1.5 border border-slate-200 rounded-lg focus:outline-none focus:border-purple-600 bg-white">
+                            </td>
+                        </tr>
+                        {% endwith %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="py-12 text-center text-slate-400 text-sm">
+                                <i class="fa-solid fa-user-slash text-3xl mb-2 block opacity-40"></i>
+                                No active students found matching the selected filters.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Sticky Bottom Submit Bar -->
+            {% if student_rows %}
+            <div class="p-4 sm:px-6 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                <span class="text-xs text-slate-500">Review selections above and click save to apply.</span>
+                <button type="submit" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/30 transition flex items-center space-x-2 text-sm">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Save All Attendance Records</span>
+                </button>
+            </div>
+            {% endif %}
+
+        </div>
+    </form>
+
+</div>
+
+<!-- JavaScript for Quick Batch Actions -->
+<script>
+    function markAllStatus(statusValue) {
+        const radios = document.querySelectorAll(`input[type="radio"].status-radio[value="${statusValue}"]`);
+        radios.forEach(radio => {
+            radio.checked = true;
+        });
+    }
+</script>
+{% endblock %}

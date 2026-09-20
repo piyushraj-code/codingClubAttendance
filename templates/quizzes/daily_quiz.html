@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Quiz & Poll - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    {% if quiz %}
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-brand-700 via-indigo-600 to-indigo-800 p-6 sm:p-8 text-white relative">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-white/20 backdrop-blur-md">
+                    <i class="fa-solid fa-calendar-day mr-1"></i>{{ quiz.date|date:"l, d F Y" }}
+                </span>
+                <span class="text-xs font-bold text-amber-300 bg-amber-400/20 px-3 py-1 rounded-full border border-amber-300/30">
+                    <i class="fa-solid fa-bolt mr-1"></i>+{{ quiz.points }} Points
+                </span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-extrabold mt-3 tracking-tight">
+                {{ quiz.title|default:"Daily Club Challenge & Poll" }}
+            </h1>
+        </div>
+
+        <!-- Question Body -->
+        <div class="p-6 sm:p-8 space-y-6">
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <span class="text-xs font-bold uppercase text-slate-400 block mb-1">Question Prompt</span>
+                <p class="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed">
+                    {{ quiz.question }}
+                </p>
+            </div>
+
+            {% if has_submitted %}
+            <!-- RESULTS & POLL PERCENTAGES (When already answered) -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                        Live Community Poll Results ({{ quiz.total_votes }} total votes)
+                    </span>
+                    {% if submission.is_correct %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i>You got it right! (+{{ submission.points_awarded }} pts)
+                    </span>
+                    {% else %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                        <i class="fa-solid fa-circle-xmark mr-1.5 text-amber-600"></i>Incorrect Pick (0 pts)
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Poll Options Progress Bars -->
+                <div class="space-y-3">
+                    {% for item in options_stats %}
+                    {% with opt=item.option %}
+                    <div class="relative overflow-hidden rounded-2xl border transition-all p-4 
+                        {% if opt.id == submission.selected_option_id and opt.is_correct %}
+                            border-emerald-500 bg-emerald-50/40 shadow-xs
+                        {% elif opt.id == submission.selected_option_id and not opt.is_correct %}
+                            border-rose-400 bg-rose-50/40
+                        {% elif opt.is_correct %}
+                            border-emerald-400 bg-emerald-50/20
+                        {% else %}
+                            border-slate-200 bg-white
+                        {% endif %}">
+                        
+                        <!-- Background progress fill -->
+                        <div class="absolute inset-y-0 left-0 transition-all duration-700 
+                            {% if opt.is_correct %}bg-emerald-200/50{% else %}bg-slate-100{% endif %}" 
+                            data-width="{{ item.percentage }}" style="width: 0%; z-index: 0;"></div>
+
+                        <!-- Content on top of progress fill -->
+                        <div class="relative z-10 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                {% if opt.id == submission.selected_option_id %}
+                                    {% if opt.is_correct %}
+                                    <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                                    {% else %}
+                                    <i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i>
+                                    {% endif %}
+                                {% elif opt.is_correct %}
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>
+                                {% else %}
+                                    <i class="fa-regular fa-circle text-slate-300 text-lg"></i>
+                                {% endif %}
+
+                                <div>
+                                    <span class="text-sm font-semibold text-slate-800">{{ opt.option_text }}</span>
+                                    <div class="flex items-center space-x-2 mt-0.5">
+                                        {% if opt.id == submission.selected_option_id %}
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-brand-700 bg-brand-100 px-1.5 py-0.2 rounded">Your Pick</span>
+                                        {% endif %}
+                                        {% if opt.is_correct %}
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">Correct Answer</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-right">
+                                <span class="text-base font-extrabold text-slate-800 font-mono">{{ item.percentage }}%</span>
+                                <span class="text-[11px] text-slate-500 block">({{ item.votes }} votes)</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+
+                <!-- Explanation Box -->
+                <div class="mt-8 p-6 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2">
+                    <div class="flex items-center space-x-2 text-brand-700">
+                        <i class="fa-solid fa-lightbulb text-lg text-amber-500"></i>
+                        <h3 class="font-bold text-sm uppercase tracking-wider">Detailed Explanation</h3>
+                    </div>
+                    <p class="text-sm text-slate-700 leading-relaxed">
+                        {{ quiz.explanation|linebreaks }}
+                    </p>
+                </div>
+
+            </div>
+
+            {% else %}
+            <!-- POLL SUBMISSION FORM (When not answered yet) -->
+            <form method="POST" action="{% url 'submit_quiz' quiz.id %}" class="space-y-4">
+                {% csrf_token %}
+
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    Select Your Answer:
+                </label>
+
+                <div class="space-y-3">
+                    {% for opt in quiz.options.all %}
+                    <label class="flex items-center p-4 rounded-2xl border border-slate-200 hover:border-brand-500 hover:bg-brand-50/40 transition cursor-pointer group shadow-xs">
+                        <input type="radio" name="selected_option" value="{{ opt.id }}" required class="w-4 h-4 text-brand-600 border-slate-300 focus:ring-brand-500 mr-4">
+                        <span class="text-sm font-semibold text-slate-800 group-hover:text-brand-900">{{ opt.option_text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="w-full py-3.5 px-6 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg shadow-brand-500/25 transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Submit Answer & View Community Poll</span>
+                    </button>
+                    <p class="text-center text-[11px] text-slate-400 mt-2">One attempt per student. Explanation and points revealed immediately.</p>
+                </div>
+            </form>
+            {% endif %}
+
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-slate-50 p-4 sm:px-8 border-t border-slate-100 flex items-center justify-between text-xs">
+            <a href="{% url 'quiz_history' %}" class="text-brand-600 hover:underline font-semibold flex items-center space-x-1">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Past Daily Quizzes</span>
+            </a>
+            <a href="{% url 'leaderboard' %}" class="text-amber-600 hover:underline font-semibold flex items-center space-x-1">
+                <i class="fa-solid fa-trophy"></i>
+                <span>Club Leaderboard</span>
+            </a>
+        </div>
+
+    </div>
+
+    {% else %}
+    <!-- No Active Quiz State -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-12 text-center space-y-4">
+        <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mx-auto text-3xl">
+            <i class="fa-solid fa-calendar-xmark"></i>
+        </div>
+        <h2 class="text-xl font-bold text-slate-800">No Daily Quiz Active Right Now</h2>
+        <p class="text-sm text-slate-500 max-w-md mx-auto">
+            The club coordinators haven't posted a daily quiz for today yet. Check back later today or explore previous quizzes!
+        </p>
+        <div class="pt-2">
+            <a href="{% url 'quiz_history' %}" class="inline-flex items-center px-4 py-2 rounded-xl bg-brand-50 text-brand-700 font-semibold text-xs hover:bg-brand-100 transition">
+                View Past Quizzes &rarr;
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-width]').forEach(function (el) {
+            el.style.width = el.dataset.width + '%';
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

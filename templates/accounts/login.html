@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-12">
+    <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-brand-700 via-indigo-600 to-indigo-700 px-8 py-8 text-white text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md mb-3 shadow-inner">
+                <i class="fa-solid fa-arrow-right-to-bracket text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight">Member Sign In</h1>
+            <p class="text-indigo-100 text-xs mt-1">Access your club attendance, daily quizzes, and peer network.</p>
+        </div>
+
+        <!-- Form Body -->
+        <form method="POST" class="p-8 space-y-5">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <!-- Email -->
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Email Address</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fa-solid fa-envelope text-sm"></i>
+                    </span>
+                    <input type="email" name="email" required autocomplete="email" placeholder="student@example.com" class="form-input pl-10">
+                </div>
+                {% if form.email.errors %}
+                <p class="text-rose-600 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-xs font-semibold uppercase text-slate-600">Password</label>
+                    <a href="{% url 'forgot_password' %}" class="text-xs font-medium text-brand-600 hover:text-brand-700">Forgot Password? (OTP)</a>
+                </div>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fa-solid fa-lock text-sm"></i>
+                    </span>
+                    <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••" class="form-input pl-10">
+                </div>
+                {% if form.password.errors %}
+                <p class="text-rose-600 text-xs mt-1">{{ form.password.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full py-3 px-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-md shadow-brand-500/30 transition flex items-center justify-center space-x-2 mt-2">
+                <span>Sign In</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
+            </button>
+
+            <!-- Links -->
+            <div class="pt-4 border-t border-slate-100 text-center space-y-3">
+                <p class="text-xs text-slate-600">
+                    Don't have an account yet?
+                    <a href="{% url 'register' %}" class="font-semibold text-brand-600 hover:text-brand-700 ml-1">Register as a Student</a>
+                </p>
+                <div class="pt-2">
+                    <a href="{% url 'admin_login' %}" class="inline-flex items-center text-xs text-purple-700 font-semibold hover:text-purple-800 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
+                        <i class="fa-solid fa-shield-halved mr-1.5"></i>Go to Master Admin Login
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

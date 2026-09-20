@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.name }} - Profile - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Profile Header Card -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Banner gradient -->
+        <div class="h-36 bg-gradient-to-r from-brand-700 via-indigo-600 to-indigo-800"></div>
+
+        <div class="px-6 sm:px-8 pb-8 pt-0 relative">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between -mt-16 sm:-mt-20 gap-4">
+                <!-- Avatar & Details -->
+                <div class="flex flex-col sm:flex-row sm:items-end space-y-3 sm:space-y-0 sm:space-x-5">
+                    <img src="{{ profile_user.avatar_url }}" alt="{{ profile_user.name }}" class="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl object-cover border-4 border-white shadow-xl bg-white">
+                    <div class="pb-1">
+                        <div class="flex items-center space-x-2">
+                            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">{{ profile_user.name }}</h1>
+                            {% if profile_user.is_club_admin %}
+                            <span class="bg-purple-100 text-purple-700 text-xs px-2.5 py-0.5 rounded-full font-bold">Admin</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-xs sm:text-sm font-semibold text-slate-500 font-mono mt-0.5">
+                            Roll No: {{ profile_user.roll_number }} • {{ profile_user.get_branch_display }} (Sem {{ profile_user.semester }})
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Action Button: Edit or Follow -->
+                <div class="flex items-center space-x-3">
+                    {% if is_self %}
+                    <a href="{% url 'edit_profile' %}" class="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm transition flex items-center space-x-2">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>Edit Profile</span>
+                    </a>
+                    {% else %}
+                    <form method="POST" action="{% url 'follow_toggle' profile_user.roll_number %}">
+                        {% csrf_token %}
+                        {% if is_following %}
+                        <button type="submit" class="px-5 py-2.5 rounded-xl border border-slate-300 bg-slate-100 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600 text-slate-700 font-semibold text-xs sm:text-sm transition flex items-center space-x-2 group">
+                            <i class="fa-solid fa-user-check group-hover:hidden"></i>
+                            <i class="fa-solid fa-user-minus hidden group-hover:inline"></i>
+                            <span class="group-hover:hidden">Following</span>
+                            <span class="hidden group-hover:inline">Unfollow</span>
+                        </button>
+                        {% else %}
+                        <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs sm:text-sm shadow-md shadow-brand-500/30 transition flex items-center space-x-2">
+                            <i class="fa-solid fa-user-plus"></i>
+                            <span>Follow Peer</span>
+                        </button>
+                        {% endif %}
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Bio -->
+            <p class="text-sm text-slate-600 mt-6 max-w-2xl">
+                {{ profile_user.bio|default:"No bio provided yet." }}
+            </p>
+
+            <!-- Metrics bar -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-100">
+                <div>
+                    <span class="text-[11px] uppercase font-bold text-slate-400 block">Attendance Rate</span>
+                    <span class="text-xl font-extrabold {% if summary.percentage >= 75 %}text-emerald-600{% elif summary.percentage >= 60 %}text-amber-500{% else %}text-rose-600{% endif %}">
+                        {{ summary.percentage }}%
+                    </span>
+                </div>
+                <div>
+                    <span class="text-[11px] uppercase font-bold text-slate-400 block">Quiz Points</span>
+                    <span class="text-xl font-extrabold text-amber-500 flex items-center">
+                        <i class="fa-solid fa-bolt mr-1 text-sm"></i>{{ profile_user.quiz_points }}
+                    </span>
+                </div>
+                <div>
+                    <span class="text-[11px] uppercase font-bold text-slate-400 block">Followers</span>
+                    <span class="text-xl font-extrabold text-slate-800">{{ profile_user.followers.count }}</span>
+                </div>
+                <div>
+                    <span class="text-[11px] uppercase font-bold text-slate-400 block">Following</span>
+                    <span class="text-xl font-extrabold text-slate-800">{{ profile_user.following.count }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Records Section (View peer's / my attendance) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800">
+                    {% if is_self %}My Attendance History{% else %}{{ profile_user.name }}'s Attendance Records{% endif %}
+                </h2>
+                <p class="text-xs text-slate-500">Transparent club attendance record history</p>
+            </div>
+            {% if is_self %}
+            <a href="{% url 'export_my_attendance' %}" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-download"></i>
+                <span>Export CSV</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-[11px] uppercase font-semibold text-slate-500 border-b border-slate-100">
+                        <th class="py-3.5 px-6">Date</th>
+                        <th class="py-3.5 px-6">Activity Session</th>
+                        <th class="py-3.5 px-6">Category</th>
+                        <th class="py-3.5 px-6">Status</th>
+                        <th class="py-3.5 px-6">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    {% for record in attendance_records %}
+                    <tr class="hover:bg-slate-50/70 transition">
+                        <td class="py-3.5 px-6 font-mono text-xs text-slate-600">{{ record.date|date:"d M Y" }}</td>
+                        <td class="py-3.5 px-6 font-medium text-slate-800">
+                            {{ record.activity.title|default:"General Club Meetup" }}
+                        </td>
+                        <td class="py-3.5 px-6 text-xs text-slate-500">
+                            {{ record.activity.get_activity_type_display|default:"General" }}
+                        </td>
+                        <td class="py-3.5 px-6">
+                            {% if record.status == 'PRESENT' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <i class="fa-solid fa-circle-check text-[10px] mr-1.5"></i>Present
+                            </span>
+                            {% elif record.status == 'LATE' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                <i class="fa-solid fa-clock text-[10px] mr-1.5"></i>Late
+                            </span>
+                            {% elif record.status == 'ABSENT' %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                <i class="fa-solid fa-circle-xmark text-[10px] mr-1.5"></i>Absent
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                                {{ record.get_status_display }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-6 text-xs text-slate-500">{{ record.remarks|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-slate-400 text-sm">
+                            <i class="fa-solid fa-clipboard-check text-3xl mb-2 block opacity-40"></i>
+                            No attendance records on file yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

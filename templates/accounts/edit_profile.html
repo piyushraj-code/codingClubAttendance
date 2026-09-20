@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-brand-700 via-indigo-600 to-indigo-700 px-8 py-6 text-white">
+            <h1 class="text-xl font-bold">Edit Profile Details</h1>
+            <p class="text-indigo-100 text-xs mt-0.5">Keep your club information and profile picture up to date.</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <!-- Current Avatar Preview & Upload -->
+            <div class="flex items-center space-x-6 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <img src="{{ user.avatar_url }}" alt="{{ user.name }}" class="w-20 h-20 rounded-2xl object-cover border-2 border-white shadow-md">
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold uppercase text-slate-700">Update Profile Picture</label>
+                    {{ form.profile_pic }}
+                    <p class="text-[11px] text-slate-400">JPG, PNG or WEBP format</p>
+                    {% if form.profile_pic.errors %}
+                    <p class="text-rose-600 text-xs">{{ form.profile_pic.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Full Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Mobile Number</label>
+                    {{ form.mobile_number }}
+                    {% if form.mobile_number.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.mobile_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Branch</label>
+                    {{ form.branch }}
+                    {% if form.branch.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.branch.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Semester</label>
+                    {{ form.semester }}
+                    {% if form.semester.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.semester.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Bio / Club Interests</label>
+                {{ form.bio }}
+                {% if form.bio.errors %}
+                <p class="text-rose-600 text-xs mt-1">{{ form.bio.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center space-x-3 pt-2">
+                <button type="submit" class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-md shadow-brand-500/20 transition flex items-center space-x-2 text-sm">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Save Changes</span>
+                </button>
+                <a href="{% url 'my_profile' %}" class="px-5 py-3 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm transition">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

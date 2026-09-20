@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Registration - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-brand-700 via-indigo-600 to-indigo-700 px-8 py-6 text-white text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md mb-2">
+                <i class="fa-solid fa-user-plus text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight">Student Registration</h1>
+            <p class="text-indigo-100 text-sm mt-1">Join the club to participate in activities, track attendance, and compete in daily quizzes.</p>
+        </div>
+
+        <!-- Form Body -->
+        <form method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+            {% csrf_request %}
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- Full Name -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Full Name *</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Roll Number -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Roll Number *</label>
+                    {{ form.roll_number }}
+                    {% if form.roll_number.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.roll_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Branch -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Branch / Department *</label>
+                    {{ form.branch }}
+                    {% if form.branch.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.branch.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Semester -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Semester *</label>
+                    {{ form.semester }}
+                    {% if form.semester.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.semester.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Email Address (Login ID) *</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile Number -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Mobile Number *</label>
+                    {{ form.mobile_number }}
+                    {% if form.mobile_number.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.mobile_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Password *</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Confirm Password *</label>
+                    {{ form.confirm_password }}
+                    {% if form.confirm_password.errors %}
+                    <p class="text-rose-600 text-xs mt-1">{{ form.confirm_password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Profile Picture -->
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Profile Picture (Optional)</label>
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-xl hover:border-brand-500 transition">
+                    <div class="space-y-1 text-center">
+                        <i class="fa-solid fa-camera text-slate-400 text-2xl mb-1"></i>
+                        <div class="text-sm text-slate-600">
+                            {{ form.profile_pic }}
+                        </div>
+                        <p class="text-xs text-slate-400">PNG, JPG, JPEG up to 5MB</p>
+                    </div>
+                </div>
+                {% if form.profile_pic.errors %}
+                <p class="text-rose-600 text-xs mt-1">{{ form.profile_pic.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Bio -->
+            <div>
+                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">About You / Club Interests</label>
+                {{ form.bio }}
+                {% if form.bio.errors %}
+                <p class="text-rose-600 text-xs mt-1">{{ form.bio.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl shadow-md shadow-brand-500/30 transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-check"></i>
+                <span>Complete Registration</span>
+            </button>
+
+            <!-- Already have account -->
+            <div class="text-center pt-2 text-sm text-slate-600">
+                Already registered?
+                <a href="{% url 'login' %}" class="font-semibold text-brand-600 hover:text-brand-700 ml-1">Sign in to your account</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

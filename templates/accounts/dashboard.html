@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Welcome Banner -->
+    <div class="bg-gradient-to-r from-brand-700 via-indigo-600 to-indigo-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-brand-500/20 relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-10 opacity-10 text-9xl">
+            <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+            <div class="flex items-center space-x-4">
+                <img src="{{ student.avatar_url }}" alt="{{ student.name }}" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white/30 shadow-md">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">{{ student.name }}</h1>
+                        <span class="bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-full font-medium backdrop-blur-sm">{{ student.roll_number }}</span>
+                    </div>
+                    <p class="text-indigo-100 text-sm mt-1">
+                        {{ student.get_branch_display }} • Semester {{ student.semester }}
+                    </p>
+                    <div class="flex items-center space-x-4 mt-2 text-xs text-indigo-200">
+                        <span><strong class="text-white">{{ student.followers.count }}</strong> Followers</span>
+                        <span><strong class="text-white">{{ student.following.count }}</strong> Following</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="flex flex-wrap gap-2.5">
+                <a href="{% url 'daily_quiz' %}" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-poll"></i>
+                    <span>Daily Quiz</span>
+                </a>
+                <a href="{% url 'my_attendance' %}" class="bg-white/10 hover:bg-white/20 text-white font-medium px-4 py-2.5 rounded-xl text-xs sm:text-sm backdrop-blur-md border border-white/20 transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span>Attendance Log</span>
+                </a>
+                <a href="{% url 'edit_profile' %}" class="bg-white/10 hover:bg-white/20 text-white font-medium px-3 py-2.5 rounded-xl text-xs sm:text-sm backdrop-blur-md border border-white/20 transition">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Metric Summary Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- Percentage Card -->
+        <div class="col-span-2 lg:col-span-1 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-xs font-semibold uppercase text-slate-400">Attendance Rate</span>
+            <div class="my-2 flex items-baseline space-x-1">
+                <span class="text-4xl font-extrabold {% if summary.percentage >= 75 %}text-emerald-600{% elif summary.percentage >= 60 %}text-amber-500{% else %}text-rose-600{% endif %}">
+                    {{ summary.percentage }}%
+                </span>
+            </div>
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden mt-1">
+                <div class="h-2 rounded-full {% if summary.percentage >= 75 %}bg-emerald-500{% elif summary.percentage >= 60 %}bg-amber-500{% else %}bg-rose-500{% endif %}" style="width: {{ summary.percentage }}%;"></div>
+            </div>
+            <span class="text-[11px] text-slate-500 mt-2">Requirement: 75% for activities</span>
+        </div>
+
+        <!-- Total Sessions -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase text-slate-400">Total Sessions</span>
+                <span class="w-8 h-8 rounded-lg bg-indigo-50 text-brand-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-calendar"></i>
+                </span>
+            </div>
+            <div class="text-2xl font-bold text-slate-800 mt-3">{{ summary.total }}</div>
+            <span class="text-[11px] text-slate-400">Recorded sessions</span>
+        </div>
+
+        <!-- Present Sessions -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase text-slate-400">Present</span>
+                <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-circle-check"></i>
+                </span>
+            </div>
+            <div class="text-2xl font-bold text-emerald-600 mt-3">{{ summary.present }}</div>
+            <span class="text-[11px] text-slate-400">On-time attendances</span>
+        </div>
+
+        <!-- Late Sessions -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase text-slate-400">Late</span>
+                <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-clock"></i>
+                </span>
+            </div>
+            <div class="text-2xl font-bold text-amber-600 mt-3">{{ summary.late }}</div>
+            <span class="text-[11px] text-slate-400">Counts as partial</span>
+        </div>
+
+        <!-- Quiz Points -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase text-slate-400">Quiz Points</span>
+                <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-bolt"></i>
+                </span>
+            </div>
+            <div class="text-2xl font-bold text-amber-600 mt-3">{{ student.quiz_points }}</div>
+            <a href="{% url 'leaderboard' %}" class="text-[11px] text-brand-600 font-semibold hover:underline block mt-0.5">View Leaderboard &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Main 2-Column Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left: Recent Attendance Table & Activities -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Recent Attendance Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800">Recent Attendance Records</h2>
+                        <p class="text-xs text-slate-500">Your latest logged club activity attendances</p>
+                    </div>
+                    <a href="{% url 'my_attendance' %}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">View All &rarr;</a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-[11px] uppercase font-semibold text-slate-500 border-b border-slate-100">
+                                <th class="py-3 px-6">Date</th>
+                                <th class="py-3 px-6">Activity / Session</th>
+                                <th class="py-3 px-6">Status</th>
+                                <th class="py-3 px-6">Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            {% for record in recent_attendance %}
+                            <tr class="hover:bg-slate-50/70 transition">
+                                <td class="py-3.5 px-6 font-mono text-xs text-slate-600">{{ record.date|date:"d M Y" }}</td>
+                                <td class="py-3.5 px-6">
+                                    <span class="font-medium text-slate-800 block">
+                                        {{ record.activity.title|default:"General Club Meetup" }}
+                                    </span>
+                                    {% if record.activity %}
+                                    <span class="text-[11px] text-slate-400">{{ record.activity.get_activity_type_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3.5 px-6">
+                                    {% if record.status == 'PRESENT' %}
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <i class="fa-solid fa-circle-check text-[10px] mr-1.5"></i>Present
+                                    </span>
+                                    {% elif record.status == 'LATE' %}
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                        <i class="fa-solid fa-clock text-[10px] mr-1.5"></i>Late
+                                    </span>
+                                    {% elif record.status == 'ABSENT' %}
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                                        <i class="fa-solid fa-circle-xmark text-[10px] mr-1.5"></i>Absent
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                                        {{ record.get_status_display }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3.5 px-6 text-xs text-slate-500">{{ record.remarks|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="py-8 text-center text-slate-400 text-sm">
+                                    <i class="fa-solid fa-calendar-xmark text-2xl mb-2 block opacity-40"></i>
+                                    No attendance records logged yet. Attend upcoming activities!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Upcoming Activities -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-slate-800">Scheduled Club Activities</h2>
+                    <a href="{% url 'activities_list' %}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">All Sessions &rarr;</a>
+                </div>
+                <div class="space-y-3">
+                    {% for act in upcoming_activities %}
+                    <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-brand-200 transition flex items-center justify-between">
+                        <div class="space-y-1">
+                            <span class="text-xs font-semibold uppercase text-brand-600 tracking-wider">{{ act.get_activity_type_display }}</span>
+                            <h3 class="text-sm font-bold text-slate-800">{{ act.title }}</h3>
+                            <div class="flex items-center space-x-3 text-xs text-slate-500">
+                                <span><i class="fa-solid fa-calendar mr-1 opacity-70"></i>{{ act.date|date:"D, d M" }}</span>
+                                {% if act.time %}
+                                <span><i class="fa-solid fa-clock mr-1 opacity-70"></i>{{ act.time|time:"g:i A" }}</span>
+                                {% endif %}
+                                <span><i class="fa-solid fa-location-dot mr-1 opacity-70"></i>{{ act.venue }}</span>
+                            </div>
+                        </div>
+                        <a href="{% url 'activity_detail' act.id %}" class="text-xs font-medium bg-brand-50 hover:bg-brand-100 text-brand-700 px-3 py-1.5 rounded-lg border border-brand-200 transition">
+                            Details
+                        </a>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-slate-400 text-center py-4">No upcoming events scheduled at this moment.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Daily Quiz Card & Peer Follows -->
+        <div class="space-y-6">
+            <!-- Today's Daily Quiz Widget -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-5 text-slate-900">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-extrabold uppercase tracking-wider bg-slate-900/10 px-2 py-0.5 rounded-md">Daily Challenge</span>
+                        <span class="text-xs font-bold text-slate-900"><i class="fa-solid fa-bolt mr-1"></i>+{{ today_quiz.points|default:10 }} Pts</span>
+                    </div>
+                    <h3 class="text-lg font-extrabold mt-2 text-white">Daily Quiz & Poll</h3>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    {% if today_quiz %}
+                        {% if quiz_submission %}
+                        <!-- Completed state -->
+                        <div class="p-4 rounded-xl {% if quiz_submission.is_correct %}bg-emerald-50 border border-emerald-200 text-emerald-900{% else %}bg-amber-50 border border-amber-200 text-amber-900{% endif %}">
+                            <div class="flex items-center space-x-2">
+                                {% if quiz_submission.is_correct %}
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                                <span class="font-bold text-sm">Completed & Correct! (+{{ quiz_submission.points_awarded }} pts)</span>
+                                {% else %}
+                                <i class="fa-solid fa-circle-info text-amber-600 text-lg"></i>
+                                <span class="font-bold text-sm">Completed! Explanation Available</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs mt-2 text-slate-700 line-clamp-2">"{{ today_quiz.question }}"</p>
+                        </div>
+                        <a href="{% url 'daily_quiz' %}" class="block text-center w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">
+                            View Poll Results & Explanation
+                        </a>
+                        {% else %}
+                        <!-- Pending state -->
+                        <div>
+                            <span class="text-xs font-semibold text-brand-600 block mb-1">Today's Question:</span>
+                            <p class="text-sm font-medium text-slate-800 line-clamp-3">
+                                {{ today_quiz.question }}
+                            </p>
+                        </div>
+                        <a href="{% url 'daily_quiz' %}" class="block text-center w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-brand-500/20 transition">
+                            Cast Vote & Take Poll &rarr;
+                        </a>
+                        {% endif %}
+                    {% else %}
+                    <div class="text-center py-6 text-slate-400 text-xs">
+                        <i class="fa-solid fa-mug-hot text-2xl mb-2 opacity-50 block"></i>
+                        No daily quiz posted for today yet. Check back soon!
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Peer Student Community Shortcut -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-bold text-slate-800">Your Peer Network</h3>
+                    <a href="{% url 'students_directory' %}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Find Peers</a>
+                </div>
+                <p class="text-xs text-slate-500">
+                    Follow other club members, check each other's attendance records, and learn together.
+                </p>
+
+                {% if student.following.exists %}
+                <div class="space-y-3 pt-2">
+                    <span class="text-[11px] font-semibold uppercase text-slate-400 block">Members you follow:</span>
+                    {% for peer in student.following.all|slice:":4" %}
+                    <a href="{% url 'public_profile' peer.roll_number %}" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 border border-slate-100 transition">
+                        <div class="flex items-center space-x-2.5">
+                            <img src="{{ peer.avatar_url }}" alt="{{ peer.name }}" class="w-8 h-8 rounded-full object-cover">
+                            <div>
+                                <span class="text-xs font-bold text-slate-800 block">{{ peer.name }}</span>
+                                <span class="text-[10px] text-slate-400">{{ peer.roll_number }} • {{ peer.get_branch_display }}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs font-semibold text-emerald-600">{{ peer.get_attendance_percentage }}%</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-4 rounded-xl bg-slate-50 text-center text-xs text-slate-500 space-y-2">
+                    <p>You aren't following any peers yet.</p>
+                    <a href="{% url 'students_directory' %}" class="inline-block font-semibold text-brand-600 hover:underline">
+                        Explore Student Directory &rarr;
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

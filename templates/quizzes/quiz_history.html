@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Past Daily Quizzes - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Quiz History & Archive</h1>
+            <p class="text-xs sm:text-sm text-slate-500">Review previous daily quizzes and track your performance.</p>
+        </div>
+        <a href="{% url 'daily_quiz' %}" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 rounded-xl text-xs transition">
+            Today's Quiz &rarr;
+        </a>
+    </div>
+
+    <div class="space-y-4">
+        {% for item in quiz_list %}
+        {% with q=item.quiz sub=item.submission %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 hover:shadow-md transition">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-1.5 flex-grow">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-mono font-semibold text-slate-500">{{ q.date|date:"d M Y" }}</span>
+                        <span class="text-[10px] font-bold uppercase bg-amber-50 text-amber-700 px-2 py-0.5 rounded border border-amber-200">
+                            +{{ q.points }} pts
+                        </span>
+                        {% if item.is_attempted %}
+                            {% if item.is_correct %}
+                            <span class="text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200">
+                                Correct (+{{ sub.points_awarded }} pts)
+                            </span>
+                            {% else %}
+                            <span class="text-[10px] font-bold uppercase bg-rose-50 text-rose-700 px-2 py-0.5 rounded border border-rose-200">
+                                Missed
+                            </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-[10px] font-bold uppercase bg-slate-100 text-slate-500 px-2 py-0.5 rounded">
+                                Unattempted
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <h2 class="text-base font-bold text-slate-800">
+                        {{ q.title|default:"Daily Quiz Challenge" }}
+                    </h2>
+                    <p class="text-xs text-slate-600 line-clamp-2">
+                        {{ q.question }}
+                    </p>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs text-slate-400 font-medium">
+                        <i class="fa-solid fa-users text-[10px] mr-1"></i>{{ q.total_votes }} votes
+                    </span>
+                    <a href="{% url 'daily_quiz' %}" class="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+                        View
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% empty %}
+        <div class="bg-white rounded-2xl p-12 text-center text-slate-400 text-sm border border-slate-200">
+            No past quizzes recorded.
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

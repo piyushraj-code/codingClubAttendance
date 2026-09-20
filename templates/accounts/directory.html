@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Peer Directory - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Header & Search -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Student & Peer Directory</h1>
+            <p class="text-xs sm:text-sm text-slate-500">Connect with fellow club members, follow their activities, and check attendance.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <form method="GET" class="flex flex-wrap items-center gap-2">
+            <div class="relative flex-grow sm:w-64">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-xs">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" name="q" value="{{ query }}" placeholder="Search by name, roll, email..." class="form-input pl-9 text-xs py-2">
+            </div>
+
+            <select name="branch" class="form-input text-xs py-2 w-auto">
+                <option value="">All Branches</option>
+                {% for code, label in branches %}
+                <option value="{{ code }}" {% if branch_filter == code %}selected{% endif %}>{{ code }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="semester" class="form-input text-xs py-2 w-auto">
+                <option value="">All Semesters</option>
+                {% for sem_val, sem_label in semesters %}
+                <option value="{{ sem_val }}" {% if semester_filter == sem_val|stringformat:"i" %}selected{% endif %}>Sem {{ sem_val }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 rounded-lg text-xs transition">
+                Filter
+            </button>
+            {% if query or branch_filter or semester_filter %}
+            <a href="{% url 'students_directory' %}" class="text-xs text-slate-500 hover:text-slate-700 px-2 py-2">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Students Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for student in students %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition">
+            <div class="space-y-4">
+                <!-- User Info -->
+                <div class="flex items-start space-x-3.5">
+                    <img src="{{ student.avatar_url }}" alt="{{ student.name }}" class="w-14 h-14 rounded-2xl object-cover border border-slate-200">
+                    <div class="flex-grow">
+                        <a href="{% url 'public_profile' student.roll_number %}" class="font-bold text-slate-900 hover:text-brand-600 transition block text-base leading-snug">
+                            {{ student.name }}
+                        </a>
+                        <span class="text-xs font-mono font-medium text-slate-500 block">{{ student.roll_number }}</span>
+                        <span class="inline-block text-[11px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-md mt-1">
+                            {{ student.get_branch_display }} • Sem {{ student.semester }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Bio snippet -->
+                <p class="text-xs text-slate-600 line-clamp-2">
+                    {{ student.bio|default:"Active club participant." }}
+                </p>
+
+                <!-- Stats summary -->
+                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-center">
+                    <div class="p-2 rounded-xl bg-slate-50">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Attendance</span>
+                        <span class="text-sm font-extrabold text-emerald-600">{{ student.get_attendance_percentage }}%</span>
+                    </div>
+                    <div class="p-2 rounded-xl bg-amber-50/60">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">Quiz Points</span>
+                        <span class="text-sm font-extrabold text-amber-600 flex items-center justify-center">
+                            <i class="fa-solid fa-bolt mr-1 text-xs"></i>{{ student.quiz_points }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions: View & Follow -->
+            <div class="flex items-center space-x-2 pt-4 mt-4 border-t border-slate-100">
+                <a href="{% url 'public_profile' student.roll_number %}" class="flex-grow text-center py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">
+                    View Profile & Attendance
+                </a>
+
+                <form method="POST" action="{% url 'follow_toggle' student.roll_number %}">
+                    {% csrf_token %}
+                    {% if student in user.following.all %}
+                    <button type="submit" title="Unfollow" class="p-2 bg-emerald-50 text-emerald-700 hover:bg-rose-50 hover:text-rose-600 border border-emerald-200 rounded-xl transition text-xs">
+                        <i class="fa-solid fa-user-check"></i>
+                    </button>
+                    {% else %}
+                    <button type="submit" title="Follow" class="p-2 bg-brand-50 text-brand-700 hover:bg-brand-600 hover:text-white border border-brand-200 rounded-xl transition text-xs">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12 text-slate-400 text-sm">
+            <i class="fa-solid fa-users-slash text-3xl mb-2 block opacity-40"></i>
+            No students found matching your criteria.
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Club Leaderboard - Enigma{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Header -->
+    <div class="text-center space-y-2">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 text-2xl shadow-sm mb-1">
+            <i class="fa-solid fa-trophy"></i>
+        </div>
+        <h1 class="text-3xl font-extrabold text-slate-900">Club Honor Leaderboard</h1>
+        <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+            Celebrating consistent activity attendance and daily quiz challenge champions.
+        </p>
+    </div>
+
+    <!-- 2 Leaderboard Columns -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Leaderboard 1: Daily Quiz Points -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-5 text-slate-950 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <i class="fa-solid fa-bolt text-lg"></i>
+                    <h2 class="font-extrabold text-base text-white">Top Daily Quiz Champions</h2>
+                </div>
+                <span class="text-xs font-bold bg-white/20 px-2.5 py-0.5 rounded-full text-white">Points</span>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                {% for student in top_quiz_students %}
+                <div class="p-4 sm:px-6 flex items-center justify-between hover:bg-slate-50 transition">
+                    <div class="flex items-center space-x-4">
+                        <!-- Rank badge -->
+                        <span class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs 
+                            {% if forloop.counter == 1 %}bg-amber-400 text-slate-950 shadow-sm
+                            {% elif forloop.counter == 2 %}bg-slate-300 text-slate-800
+                            {% elif forloop.counter == 3 %}bg-amber-700/20 text-amber-800
+                            {% else %}text-slate-400 bg-slate-100{% endif %}">
+                            {{ forloop.counter }}
+                        </span>
+
+                        <img src="{{ student.avatar_url }}" alt="{{ student.name }}" class="w-10 h-10 rounded-full object-cover border border-slate-200">
+
+                        <div>
+                            <a href="{% url 'public_profile' student.roll_number %}" class="font-bold text-sm text-slate-800 hover:text-brand-600 block">
+                                {{ student.name }}
+                            </a>
+                            <span class="text-[11px] text-slate-400 font-mono">{{ student.roll_number }} • {{ student.get_branch_display }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-1.5 font-bold text-amber-600 font-mono text-sm">
+                        <i class="fa-solid fa-bolt text-xs"></i>
+                        <span>{{ student.quiz_points }} pts</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center text-slate-400 text-sm">No quiz submissions yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Leaderboard 2: Attendance Consistency -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                    <i class="fa-solid fa-calendar-check text-lg"></i>
+                    <h2 class="font-extrabold text-base">Top Attendance Consistency</h2>
+                </div>
+                <span class="text-xs font-bold bg-white/20 px-2.5 py-0.5 rounded-full">Rate</span>
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                {% for item in top_attendance_students %}
+                {% with s=item.student %}
+                <div class="p-4 sm:px-6 flex items-center justify-between hover:bg-slate-50 transition">
+                    <div class="flex items-center space-x-4">
+                        <!-- Rank badge -->
+                        <span class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs 
+                            {% if forloop.counter == 1 %}bg-amber-400 text-slate-950 shadow-sm
+                            {% elif forloop.counter == 2 %}bg-slate-300 text-slate-800
+                            {% elif forloop.counter == 3 %}bg-amber-700/20 text-amber-800
+                            {% else %}text-slate-400 bg-slate-100{% endif %}">
+                            {{ forloop.counter }}
+                        </span>
+
+                        <img src="{{ s.avatar_url }}" alt="{{ s.name }}" class="w-10 h-10 rounded-full object-cover border border-slate-200">
+
+                        <div>
+                            <a href="{% url 'public_profile' s.roll_number %}" class="font-bold text-sm text-slate-800 hover:text-brand-600 block">
+                                {{ s.name }}
+                            </a>
+                            <span class="text-[11px] text-slate-400 font-mono">{{ s.roll_number }} • {{ s.get_branch_display }}</span>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <span class="text-base font-extrabold text-emerald-600 font-mono">{{ item.attendance_percentage }}%</span>
+                    </div>
+                </div>
+                {% endwith %}
+                {% empty %}
+                <div class="p-8 text-center text-slate-400 text-sm">No attendance records yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Quiz Analytics - Master Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full">
+                    Analytics
+                </span>
+                <span class="text-xs text-slate-400">•</span>
+                <span class="text-xs text-slate-500 font-mono">{{ quiz.date|date:"d M Y" }}</span>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 mt-1">{{ quiz.title|default:"Daily Quiz Performance" }}</h1>
+        </div>
+        <a href="{% url 'admin_quizzes' %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">
+            &larr; All Quizzes
+        </a>
+    </div>
+
+    <!-- Question & Poll Breakdown Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div>
+            <span class="text-xs font-bold uppercase text-slate-400 block mb-1">Question</span>
+            <p class="text-base font-semibold text-slate-900">{{ quiz.question }}</p>
+        </div>
+
+        <!-- Progress Bars Breakdown -->
+        <div class="space-y-3">
+            <span class="text-xs font-bold uppercase text-slate-500 block">Poll Vote Distribution ({{ total_submissions }} Total Submissions)</span>
+            {% for item in options_stats %}
+            {% with opt=item.option %}
+            <div class="relative overflow-hidden rounded-xl border border-slate-200 p-3.5 bg-white">
+                <div class="absolute inset-y-0 left-0 {% if opt.is_correct %}bg-emerald-100/60{% else %}bg-slate-100{% endif %}" style="width: {{ item.percentage }}%;"></div>
+                <div class="relative z-10 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        {% if opt.is_correct %}
+                        <span class="text-emerald-700 font-bold text-xs"><i class="fa-solid fa-circle-check mr-1"></i>[Correct]</span>
+                        {% endif %}
+                        <span class="text-xs font-semibold text-slate-800">{{ opt.option_text }}</span>
+                    </div>
+                    <div class="text-right font-mono text-xs">
+                        <span class="font-bold text-slate-900">{{ item.percentage }}%</span>
+                        <span class="text-slate-400 text-[11px]">({{ item.votes }} votes)</span>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1">
+            <strong class="font-bold text-purple-800 block uppercase tracking-wider text-[10px]">Explanation Provided:</strong>
+            <p>{{ quiz.explanation }}</p>
+        </div>
+    </div>
+
+    <!-- Submissions Roster -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100">
+            <h2 class="text-base font-bold text-slate-900">Student Responses ({{ total_submissions }})</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-[11px] uppercase font-bold text-slate-500 border-b border-slate-200">
+                        <th class="py-3 px-6">Student</th>
+                        <th class="py-3 px-6">Selected Choice</th>
+                        <th class="py-3 px-6 text-center">Result</th>
+                        <th class="py-3 px-6 text-center">Points</th>
+                        <th class="py-3 px-6">Time</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    {% for sub in submissions %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-6">
+                            <span class="font-bold text-slate-800 block text-xs">{{ sub.student.name }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">{{ sub.student.roll_number }} • {{ sub.student.get_branch_display }}</span>
+                        </td>
+                        <td class="py-3.5 px-6 text-xs text-slate-700 font-medium">
+                            {{ sub.selected_option.option_text }}
+                        </td>
+                        <td class="py-3.5 px-6 text-center">
+                            {% if sub.is_correct %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Correct
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                Incorrect
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-6 text-center font-mono font-bold text-xs text-amber-600">
+                            +{{ sub.points_awarded }}
+                        </td>
+                        <td class="py-3.5 px-6 text-xs text-slate-400 font-mono">
+                            {{ sub.submitted_at|date:"g:i A, d M" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-slate-400 text-xs">
+                            No student responses recorded yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

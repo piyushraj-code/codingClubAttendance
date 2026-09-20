@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Daily Quizzes - Master Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="text-xs font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded-full">
+                    Master Admin
+                </span>
+                <span class="text-xs text-slate-400">•</span>
+                <span class="text-xs font-medium text-slate-500">Daily Quiz Management</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">Daily Quizzes & Polls</h1>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'admin_create_quiz' %}" class="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs transition flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-solid fa-plus"></i>
+                <span>Create Daily Quiz</span>
+            </a>
+            <a href="{% url 'admin_dashboard' %}" class="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold rounded-xl text-xs transition">
+                &larr; Admin Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Quizzes Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 text-[11px] uppercase font-bold text-slate-500 border-b border-slate-200">
+                        <th class="py-3.5 px-6">Scheduled Date</th>
+                        <th class="py-3.5 px-6">Title & Question Preview</th>
+                        <th class="py-3.5 px-6">Poll Options</th>
+                        <th class="py-3.5 px-6 text-center">Votes Cast</th>
+                        <th class="py-3.5 px-6 text-center">Status</th>
+                        <th class="py-3.5 px-6 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                    {% for q in quizzes %}
+                    <tr class="hover:bg-slate-50/70 transition">
+                        <td class="py-3.5 px-6 font-mono text-xs font-semibold text-slate-700">
+                            {{ q.date|date:"d M Y" }}
+                        </td>
+                        <td class="py-3.5 px-6">
+                            <span class="font-bold text-slate-900 block text-sm">{{ q.title|default:"Daily Quiz" }}</span>
+                            <span class="text-xs text-slate-500 line-clamp-1 mt-0.5">{{ q.question }}</span>
+                        </td>
+                        <td class="py-3.5 px-6">
+                            <div class="space-y-1">
+                                {% for opt in q.options.all %}
+                                <div class="text-[11px] flex items-center space-x-1.5 {% if opt.is_correct %}text-emerald-700 font-bold{% else %}text-slate-500{% endif %}">
+                                    {% if opt.is_correct %}
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-[10px]"></i>
+                                    {% else %}
+                                    <i class="fa-regular fa-circle text-slate-300 text-[10px]"></i>
+                                    {% endif %}
+                                    <span class="line-clamp-1">{{ opt.option_text }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-6 text-center font-mono font-bold text-xs text-slate-700">
+                            {{ q.total_votes }}
+                        </td>
+                        <td class="py-3.5 px-6 text-center">
+                            {% if q.is_active %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Active
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500">
+                                Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-6 text-right">
+                            <div class="flex items-center justify-end space-x-2">
+                                <a href="{% url 'admin_quiz_analytics' q.id %}" title="Analytics" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition text-xs">
+                                    <i class="fa-solid fa-chart-pie"></i>
+                                </a>
+                                <a href="{% url 'admin_edit_quiz' q.id %}" title="Edit" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition text-xs">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <form method="POST" action="{% url 'admin_delete_quiz' q.id %}" onsubmit="return confirm('Are you sure you want to delete this daily quiz?');" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" title="Delete" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition text-xs">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-slate-400 text-sm">
+                            <i class="fa-solid fa-poll text-3xl mb-2 block opacity-40"></i>
+                            No quizzes created yet. Click "Create Daily Quiz" to add one!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
